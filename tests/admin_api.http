@@ -1,0 +1,428 @@
+@baseUrl = http://localhost:5000
+@adminPassword = TanfAdmin!2025
+# Figyelem: Az @adminPassword-nak megfelelő hash-nek kell lennie a .env fájlban az ADMIN változóban!
+
+###
+# ADMIN API TESZTEK
+
+### 1.1 POST /admin - Admin bejelentkezés - Sikeres
+# @name adminLogin
+# Elvárt eredmény:
+# Status: 200 OK
+# Body: JSON objektum
+#       { "token": "<jwt_token>", "message": "Sikeres bejelentkezés." }
+POST {{baseUrl}}/admin
+Content-Type: application/json
+
+{
+    "password": "{{adminPassword}}"
+}
+
+### A sikeres bejelentkezés után kapott token eltárolása
+@authToken = {{adminLogin.response.body.token}}
+
+### 1.2 POST /admin - Admin bejelentkezés - Hibás jelszó
+# @name adminLoginHibasJelszo
+# Elvárt eredmény:
+# Status: 401 Unauthorized
+# Body: JSON objektum
+#       { "message": "Hibás jelszó!" }
+POST {{baseUrl}}/admin
+Content-Type: application/json
+
+{
+    "password": "rosszjelszo"
+}
+
+### 2.1 GET /admin/csoportok - Összes csoport lekérése (Hitelesítéssel)
+# @name getAdminCsoportok
+# Elvárt eredmény:
+# Status: 200 OK
+# Body: JSON tömb, amely az összes csoportot tartalmazza.
+#       Minden objektum tartalmazza: csid, knev, indulas, beosztas, ar, letszam.
+#       A tesztadatok alapján kezdetben 5 csoportnak kell megjelennie, csökkenő indulási dátum szerint rendezve.
+GET {{baseUrl}}/admin/csoportok
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### 2.2 GET /admin/csoportok - Összes csoport lekérése (Hitelesítés NÉLKÜL)
+# @name getAdminCsoportokNoAuth
+# Elvárt eredmény:
+# Status: 401 Unauthorized
+# Body: JSON objektum
+#       { "message": "Azonosítás szükséges!" }
+GET {{baseUrl}}/admin/csoportok
+Content-Type: application/json
+
+### 3.1 POST /admin/csoportok - Új csoport hozzáadása - Sikeres
+# kid=1 (Junior frontend fejlesztő) létezik a tesztadatokban
+# @name postAdminUjCsoportSikeres
+# Elvárt eredmény:
+# Status: 201 Created
+# Body: JSON objektum
+#       { "message": "Csoport sikeresen hozzáadva!", "id": <az_uj_csoport_id-ja>, "changes": 1 }
+POST {{baseUrl}}/admin/csoportok
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "kid": 1,
+    "indulas": "2025-10-01",
+    "beosztas": "kedd-csütörtök 18-21",
+    "helyszin": "online",
+    "ar": 350000
+}
+
+### Az újonnan létrehozott csoport ID-jának kinyerése a későbbi tesztekhez
+@ujCsoportId = {{postAdminUjCsoportSikeres.response.body.id}}
+
+### 3.2 POST /admin/csoportok - Új csoport hozzáadása - Hiba: Hiányzó mezők
+# @name postAdminUjCsoportHianyzoMezok
+# Elvárt eredmény:
+# Status: 400 Bad Request
+# Body: JSON objektum
+#       { "message": "Hiányzó kötelező mezők." }
+POST {{baseUrl}}/admin/csoportok
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "kid": 2,
+    "indulas": "2025-11-01"
+}
+
+### 3.3 POST /admin/csoportok - Új csoport hozzáadása - Hiba: Érvénytelen képzés azonosító (kid)
+# kid=99 nem létezik
+# @name postAdminUjCsoportErvenytelenKid
+# Elvárt eredmény:
+# Status: 400 Bad Request
+# Body: JSON objektum
+#       { "message": "Érvénytelen képzés azonosító (kid)." }
+POST {{baseUrl}}/admin/csoportok
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "kid": 99,
+    "indulas": "2025-12-01",
+    "beosztas": "hétfő 17-20",
+    "helyszin": "tanterem",
+    "ar": 400000
+}
+
+### 3.4 POST /admin/csoportok - Új csoport hozzáadása - Hiba: Negatív ár
+# @name postAdminUjCsoportNegativAr
+# Elvárt eredmény:
+# Status: 400 Bad Request
+# Body: JSON objektum
+#       { "message": "Az ár nem lehet negatív." }
+POST {{baseUrl}}/admin/csoportok
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "kid": 1,
+    "indulas": "2026-01-01",
+    "beosztas": "hétfő-szerda 10-12",
+    "helyszin": "online",
+    "ar": -1000
+}
+
+
+### 4.1 GET /admin/csoportok/:csid - Egy csoport adatainak lekérése - Létező
+# A tesztadatokból csid=1
+# @name getAdminEgyCsoportLetezo
+# Elvárt eredmény:
+# Status: 200 OK
+# Body: JSON objektum a csoport adataival (kid, indulas, beosztas, helyszin, ar).
+#       Például csid=1 esetén: { "kid": 1, "indulas": "2024-09-08", ... }
+GET {{baseUrl}}/admin/csoportok/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### 4.2 GET /admin/csoportok/:csid - Egy csoport adatainak lekérése - Nem létező
+# @name getAdminEgyCsoportNemLetezo
+# Elvárt eredmény:
+# Status: 404 Not Found
+# Body: JSON objektum
+#       { "message": "Csoport nem található." }
+GET {{baseUrl}}/admin/csoportok/999
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### 5.1 PUT /admin/csoportok/:csid - Csoport módosítása - Sikeres
+# Az előbb létrehozott csoportot ({{ujCsoportId}}) módosítjuk
+# @name putAdminCsoportModositasSikeres
+# Elvárt eredmény:
+# Status: 200 OK
+# Body: JSON objektum
+#       { "message": "Csoport sikeresen módosítva.", "changes": 1 }
+PUT {{baseUrl}}/admin/csoportok/{{ujCsoportId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "kid": 2, 
+    "indulas": "2025-10-15",
+    "beosztas": "kedd-csütörtök 18-21 (módosított)",
+    "helyszin": "online (módosított)",
+    "ar": 360000
+}
+
+### 5.2 PUT /admin/csoportok/:csid - Csoport módosítása - Hiba: Hiányzó mezők
+# @name putAdminCsoportModositasHianyzoMezok
+# Elvárt eredmény:
+# Status: 400 Bad Request
+# Body: JSON objektum
+#       { "message": "Hiányzó kötelező mezők." }
+PUT {{baseUrl}}/admin/csoportok/{{ujCsoportId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "kid": 1
+}
+
+### 5.3 PUT /admin/csoportok/:csid - Csoport módosítása - Hiba: Nem létező csoport
+# @name putAdminCsoportModositasNemLetezo
+# Elvárt eredmény:
+# Status: 404 Not Found
+# Body: JSON objektum
+#       { "message": "Csoport nem található vagy nem történt módosítás." }
+PUT {{baseUrl}}/admin/csoportok/998
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "kid": 1,
+    "indulas": "2026-01-01",
+    "beosztas": "szerda 10-13",
+    "helyszin": "online",
+    "ar": 300000
+}
+
+### 5.4 PUT /admin/csoportok/:csid - Csoport módosítása - Hiba: Érvénytelen képzés azonosító (kid)
+# @name putAdminCsoportModositasErvenytelenKid
+# Elvárt eredmény:
+# Status: 400 Bad Request
+# Body: JSON objektum
+#       { "message": "Érvénytelen képzés azonosító (kid)." }
+PUT {{baseUrl}}/admin/csoportok/{{ujCsoportId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "kid": 98, 
+    "indulas": "2025-10-15",
+    "beosztas": "kedd-csütörtök 18-21",
+    "helyszin": "online",
+    "ar": 360000
+}
+
+### 5.5 PUT /admin/csoportok/:csid - Csoport módosítása - Hiba: Negatív ár
+# @name putAdminCsoportModositasNegativAr
+# Elvárt eredmény:
+# Status: 400 Bad Request
+# Body: JSON objektum
+#       { "message": "Az ár nem lehet negatív." }
+PUT {{baseUrl}}/admin/csoportok/{{ujCsoportId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "kid": 1, 
+    "indulas": "2025-10-15",
+    "beosztas": "kedd-csütörtök 18-21",
+    "helyszin": "online",
+    "ar": -50000
+}
+
+
+### 6.1 GET /admin/lista/:csid - Egy csoport jelentkezőinek listája - Létező csoport, vannak jelentkezők
+# csid=1 (tesztadatokból)
+# @name getAdminListaLetezoCsoportVanJelentkezo
+# Elvárt eredmény:
+# Status: 200 OK
+# Body: JSON tömb a csoporthoz tartozó jelentkezőkkel, név szerint rendezve.
+#       Minden objektum tartalmazza: jid, jnev, szulnev, szulido, szulhely, anyjaneve, cim, telefon, email.
+#       A tesztadatok alapján a csid=1 csoporthoz 2 jelentkező tartozik (Kiss Gizella, Nagy Béla).
+GET {{baseUrl}}/admin/lista/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+
+### 6.2 GET /admin/lista/:csid - Egy csoport jelentkezőinek listája - Létező csoport, nincsenek jelentkezők
+# Az újonnan létrehozott {{ujCsoportId}} csoporthoz még nincsenek jelentkezők
+# @name getAdminListaLetezoCsoportNincsJelentkezo
+# Elvárt eredmény:
+# Status: 200 OK
+# Body: Üres JSON tömb [].
+GET {{baseUrl}}/admin/lista/{{ujCsoportId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### 6.3 GET /admin/lista/:csid - Egy csoport jelentkezőinek listája - Nem létező csoport
+# @name getAdminListaNemLetezoCsoport
+# Elvárt eredmény:
+# Status: 404 Not Found
+# Body: JSON objektum
+#       { "message": "A megadott csoport nem létezik." }
+GET {{baseUrl}}/admin/lista/997
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### 7.1 GET /admin/jelentkezok/:jid - Egy jelentkező adatainak lekérése - Létező
+# jid=1 (Kiss Gizella a tesztadatokból)
+# @name getAdminJelentkezoLetezo
+# Elvárt eredmény:
+# Status: 200 OK
+# Body: JSON objektum a jelentkező összes adatával.
+#       Például jid=1 esetén: { "jid": 1, "csid": 1, "jnev": "Kiss Gizella", ... }
+GET {{baseUrl}}/admin/jelentkezok/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### 7.2 GET /admin/jelentkezok/:jid - Egy jelentkező adatainak lekérése - Nem létező
+# @name getAdminJelentkezoNemLetezo
+# Elvárt eredmény:
+# Status: 404 Not Found
+# Body: JSON objektum
+#       { "message": "Jelentkező nem található." }
+GET {{baseUrl}}/admin/jelentkezok/9999
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### 8.1 PUT /admin/jelentkezok/:jid - Jelentkező módosítása - Sikeres
+# jid=1 (Kiss Gizella) módosítása, csid=2-re (létező csoport)
+# @name putAdminJelentkezoModositasSikeres
+# Elvárt eredmény:
+# Status: 200 OK
+# Body: JSON objektum
+#       { "message": "Jelentkező sikeresen módosítva.", "changes": 1 }
+PUT {{baseUrl}}/admin/jelentkezok/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "csid": 2,
+    "jnev": "Kiss Gizella Módosított Név",
+    "szulnev": "Kiss Gizella",
+    "szulido": "2000-06-02",
+    "szulhely": "Budapest",
+    "anyjaneve": "Németh Gizella",
+    "cim": "1011 Budapest, Vár u. 11. Módosított Cím",
+    "telefon": "+36702996724",
+    "email": "kissg.modositott@freemail.hu"
+}
+
+### 8.2 PUT /admin/jelentkezok/:jid - Jelentkező módosítása - Hiba: Hiányzó mezők
+# @name putAdminJelentkezoModositasHianyzoMezok
+# Elvárt eredmény:
+# Status: 400 Bad Request
+# Body: JSON objektum
+#       { "message": "Hiányzó kötelező mezők (csid, jnev, szulido, szulhely, anyjaneve, cim, telefon, email)." }
+PUT {{baseUrl}}/admin/jelentkezok/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "csid": 1,
+    "jnev": "Kiss Gizella Hiányos"
+}
+
+### 8.3 PUT /admin/jelentkezok/:jid - Jelentkező módosítása - Hiba: Nem létező jelentkező
+# @name putAdminJelentkezoModositasNemLetezoJelentkezo
+# Elvárt eredmény:
+# Status: 404 Not Found
+# Body: JSON objektum
+#       { "message": "Jelentkező nem található." }
+PUT {{baseUrl}}/admin/jelentkezok/9998
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "csid": 1,
+    "jnev": "Nem Létező Jelentkező",
+    "szulnev": "",
+    "szulido": "2000-01-01",
+    "szulhely": "Város",
+    "anyjaneve": "Anya",
+    "cim": "Utca 1.",
+    "telefon": "+36301231234",
+    "email": "nemletezo@email.com"
+}
+
+### 8.4 PUT /admin/jelentkezok/:jid - Jelentkező módosítása - Hiba: Érvénytelen csid
+# jid=2 (Nagy Béla), csid=996 (nem létező csoport)
+# @name putAdminJelentkezoModositasErvenytelenCsid
+# Elvárt eredmény:
+# Status: 400 Bad Request
+# Body: JSON objektum
+#       { "message": "A megadott csoport (csid) nem létezik." }
+PUT {{baseUrl}}/admin/jelentkezok/2
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "csid": 996,
+    "jnev": "Nagy Béla",
+    "szulnev": "Nagy Béla",
+    "szulido": "1991-01-12",
+    "szulhely": "Budapest",
+    "anyjaneve": "Kovács Lujza",
+    "cim": "1022 Budapest, Hegy u. 22.",
+    "telefon": "+36302986724",
+    "email": "nagyb@freemail.hu"
+}
+### 9.1 DELETE /admin/jelentkezok/:jid - Jelentkező törlése - Sikeres
+# Töröljük a jid=21 jelentkezőt (Kovács Zsolt a tesztadatokból)
+# @name deleteAdminJelentkezoSikeres
+# Elvárt eredmény:
+# Status: 200 OK
+# Body: JSON objektum
+#       { "message": "Jelentkező sikeresen törölve.", "changes": 1 }
+DELETE {{baseUrl}}/admin/jelentkezok/21
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### 9.2 DELETE /admin/jelentkezok/:jid - Jelentkező törlése - Hiba: Nem létező jelentkező
+# @name deleteAdminJelentkezoNemLetezo
+# Elvárt eredmény:
+# Status: 404 Not Found
+# Body: JSON objektum
+#       { "message": "Jelentkező nem található." }
+DELETE {{baseUrl}}/admin/jelentkezok/9997
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### 10.1 DELETE /admin/csoportok/:csid - Csoport törlése - Sikeres (nincs rá hivatkozás)
+# Az újonnan létrehozott és módosított {{ujCsoportId}} csoportot töröljük.
+# @name deleteAdminCsoportSikeres
+# Elvárt eredmény:
+# Status: 200 OK
+# Body: JSON objektum
+#       { "message": "Csoport sikeresen törölve.", "changes": 1 }
+DELETE {{baseUrl}}/admin/csoportok/{{ujCsoportId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### 10.2 DELETE /admin/csoportok/:csid - Csoport törlése - Hiba: Nem létező csoport
+# @name deleteAdminCsoportNemLetezo
+# Elvárt eredmény:
+# Status: 404 Not Found
+# Body: JSON objektum
+#       { "message": "Csoport nem található." }
+DELETE {{baseUrl}}/admin/csoportok/9996
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### 10.3 DELETE /admin/csoportok/:csid - Csoport törlése - Hiba: Nem törölhető (van hozzá rendelt jelentkező)
+# csid=1 csoporthoz vannak jelentkezők a tesztadatok szerint.
+# @name deleteAdminCsoportNemTorolheto
+# Elvárt eredmény:
+# Status: 400 Bad Request
+# Body: JSON objektum
+#       { "message": "A csoport nem törölhető, mert vannak hozzá rendelt jelentkezők." }
+DELETE {{baseUrl}}/admin/csoportok/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json

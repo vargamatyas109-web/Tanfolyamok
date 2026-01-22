@@ -1,0 +1,127 @@
+@baseUrl = http://localhost:5000
+
+###
+# PUBLIKUS API TESZTEK
+
+### 1. GET /public/csoportok
+# Visszaadja az ezután induló csoportok adatait létszámmal.
+# @name getPublicCsoportok
+# Elvárt eredmény:
+# Status: 200 OK
+# Body: JSON tömb, amely a jövőben induló csoportokat tartalmazza.
+#       Minden objektum tartalmazza: csid, knev, indulas, beosztas, ar, letszam.
+#       A tesztadatok alapján kezdetben a 3., 4., 5. csoportnak kell megjelennie.
+#       (mert az 1. és a 2. csoport már elindult)
+
+GET {{baseUrl}}/public/csoportok
+Content-Type: application/json
+
+### 2. POST /public/jelentkezok - Sikeres jelentkezés, majd sikertelen jelentkezés
+# Jelentkezés a csid=4 csoportba (van még 2 hely)
+# @name postPublicJelentkezoSikeres
+# Első futtatásnál elvárt eredmény:
+# Status: 201 Created
+# Body: JSON objektum
+#       { "message": "Sikeres jelentkezés!", "id": <az_uj_jelentkezo_id-ja>, "changes": 1 }
+# Második futtatásnál elvárt eredmény:
+# Status: 409 Conflict
+# Body: JSON objektum { "message": "Ezzel az e-mail címmel már jelentkeztek ebbe a csoportba." }
+
+POST {{baseUrl}}/public/jelentkezok
+Content-Type: application/json
+
+{
+    "csid": 4,
+    "jnev": "Teszt Elek Új",
+    "szulnev": "Teszt Elek Új",
+    "szulido": "1990-01-01",
+    "szulhely": "Tesztváros",
+    "anyjaneve": "Teszt Anya",
+    "cim": "1234 Teszt utca 5.",
+    "telefon": "+36301234567",
+    "email": "teszt.elek.uj@example.com"
+}
+
+### 3. POST /public/jelentkezok - Hiba: már elindult csoportba
+# Jelentkezés a csid=1 csoportba (a csoport már elindult)
+# @name postPublicJelentkezoMarElindult
+# Elvárt eredmény:
+# Status: 409 Conflict
+# Body: JSON objektum { "message": "A csoport már elindult." }
+
+POST {{baseUrl}}/public/jelentkezok
+Content-Type: application/json
+
+{
+    "csid": 1,
+    "jnev": "Teszt Elek Új",
+    "szulnev": "Teszt Elek Új",
+    "szulido": "1990-01-01",
+    "szulhely": "Tesztváros",
+    "anyjaneve": "Teszt Anya",
+    "cim": "1234 Teszt utca 5.",
+    "telefon": "+36301234567",
+    "email": "teszt.elek.uj@example.com"
+}
+
+### 4. POST /public/jelentkezok - Hiba: Nem létező csoport
+# Jelentkezés a nem létező csid=99 csoportba
+# @name postPublicJelentkezoNemLetezoCsoport
+# Elvárt eredmény:
+# Status: 404 Not Found
+# Body: JSON objektum { "message": "Ebbe a csoportba nem lehet jelentkezni." }
+
+POST {{baseUrl}}/public/jelentkezok
+Content-Type: application/json
+
+{
+    "csid": 99,
+    "jnev": "Nem Létező Csoport Teszt",
+    "szulnev": "",
+    "szulido": "1992-02-02",
+    "szulhely": "Valahol",
+    "anyjaneve": "Anyuka",
+    "cim": "Sehol utca 1.",
+    "telefon": "+36701112233",
+    "email": "nemletezo@example.com"
+}
+
+### 5. POST /public/jelentkezok - Hiba: Csoport megtelt
+# Jelentkezés a csid=3 csoportba (tesztadatok szerint 8 fővel már tele van)
+# @name postPublicJelentkezoCsoportMegtelt
+# Elvárt eredmény:
+# Status: 409 Conflict
+# Body: JSON objektum { "message": "A csoport megtelt, maximum 8 fő jelentkezhet." }
+POST {{baseUrl}}/public/jelentkezok
+Content-Type: application/json
+
+{
+    "csid": 3,
+    "jnev": "Túljelentkező Károly",
+    "szulnev": "",
+    "szulido": "1993-03-03",
+    "szulhely": "Másváros",
+    "anyjaneve": "Más Anya",
+    "cim": "Tele utca 9.",
+    "telefon": "+36204445566",
+    "email": "tuljelentkezo@example.com"
+}
+
+### 6. POST /public/jelentkezok - Hiba: Hiányzó kötelező mezők
+# Hiányzik: jnev, email
+# @name postPublicJelentkezoHianyzoMezok
+# Elvárt eredmény:
+# Status: 400 Bad Request
+# Body: JSON objektum { "message": "Hiányzó kötelező mezők." }
+POST {{baseUrl}}/public/jelentkezok
+Content-Type: application/json
+
+{
+    "csid": 1,
+    "szulnev": "Kovács Géza",
+    "szulido": "1985-05-15",
+    "szulhely": "Budapest",
+    "anyjaneve": "Nagy Mária",
+    "cim": "1111 Budapest, Fő út 1.",
+    "telefon": "+36209876543"
+}

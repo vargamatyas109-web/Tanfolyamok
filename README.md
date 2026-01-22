@@ -11,6 +11,6 @@ Tanfolyamok projektmunka Andorfer Vendel, Babai Máté, Varga Mátyás
  (Az ADMIN értékét cseréld le a jelszó hash-re, a TOKEN_SECRET értékét pedig egytitkos kulcsra)
 
 2. Hozz létre egy adatbázist `tanfolyamok.db` néven majd a test mappából töltsd fel a teszt adatokkal
-3. Powershell: `npm install`
-4. Powershel: `node app.js`
+3. Git bash: `npm install`
+4. GIt bash: `node app.js`
 (elérhető lesz a http://localhost:5000 címen).

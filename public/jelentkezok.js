@@ -1,109 +1,141 @@
-const csid = sessionStorage.csid
-document.getElementById("csid").innerHTML = csid
+// Ha nincs bejelentkezve, visszairanyitjuk a fooldra
 if (!sessionStorage.token) {
-    document.location.replace("index.html")
+    document.location.replace("index.html");
 }
-const token = 'Bearer ' + sessionStorage.token
-let letszam
-const max = 8
-jelentkezok()
 
-async function jelentkezok() {
-    const url = 'http://localhost:5000/admin/lista/' + csid;
-    const tabla = document.getElementById("jelentkezok");
+var csoportAzonosito = sessionStorage.csid;
+var token = 'Bearer ' + sessionStorage.token;
+var maxLetszam = 8;
+
+// Csoport azonosito kiirasa az oldalra
+document.getElementById("csid").innerHTML = csoportAzonosito;
+
+// Indulaskor betoltjuk a jelentkezok listajat
+jelentkezokBetoltese();
+
+// --- Jelentkezok tabla feltoltese ---
+
+async function jelentkezokBetoltese() {
+    var tabla = document.getElementById("jelentkezok");
+
     try {
-        const response = await fetch(url, {
+        var valasz = await fetch('http://localhost:5000/admin/lista/' + csoportAzonosito, {
             method: 'GET',
-            headers: {
-                'Authorization': token
-            }
+            headers: { 'Authorization': token }
         });
-        const json = await response.json();
-        if (!response.ok) {
-            throw new Error(`${response.status} ${json.message}`);
+
+        var jelentkezok = await valasz.json();
+
+        if (!valasz.ok) {
+            throw new Error(jelentkezok.message);
         }
-        tabla.innerHTML = "<tr><th>Név</th><th>Születési név</th><th>Idő</th>"
-            + "<th>Hely</th><th>Anyja neve</th><th>Cím</th><th>Telefon</th>"
-            + "<th>email</th><th>&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th></tr>";
-        json.forEach(j => {
-            tabla.innerHTML += "<tr><td>" + j.jnev + "</td><td>" + j.szulnev + "</td>"
-                + "<td>" + j.szulido + "</td><td>" + j.szulhely + "</td>"
-                + "<td>" + j.anyjaneve + "</td><td>" + j.cim + "</td>"
-                + "<td>" + j.telefon + "</td><td>" + j.email + "</td>"
-                + '<td><button class="button btn-sm btn-primary" onclick="modosit('
-                + j.jid + ')">Módosítás</button></td>'
-                + '<td><button class="button btn-sm btn-outline-danger" onclick="torol('
-                + j.jid + ')">Törlés</button></td>'
-                + "</tr>"
-        });
-        letszam = json.length;
-        document.getElementById("letszam").innerHTML = " Létszám: " + letszam + " fő";
-    } catch (err) {
-        console.error("Hiba a jelentkezők betöltésekor:", err);
-        tabla.innerHTML = '<tr><td colspan="11" class="text-danger">Hiba történt a jelentkezők betöltése közben. Kérjük, próbálja újra később.</td></tr>';
-        alert(`Hiba: ${err.message}`);
+
+        // Tabla fejlec
+        tabla.innerHTML = "<tr><th>Nev</th><th>Szuletesi nev</th><th>Ido</th>"
+            + "<th>Hely</th><th>Anyja neve</th><th>Cim</th><th>Telefon</th>"
+            + "<th>Email</th><th></th><th></th></tr>";
+
+        // Minden jelentkezo egy sor
+        for (var i = 0; i < jelentkezok.length; i++) {
+            var j = jelentkezok[i];
+            tabla.innerHTML += "<tr>"
+                + "<td>" + j.jnev + "</td>"
+                + "<td>" + (j.szulnev || "") + "</td>"
+                + "<td>" + j.szulido + "</td>"
+                + "<td>" + j.szulhely + "</td>"
+                + "<td>" + j.anyjaneve + "</td>"
+                + "<td>" + j.cim + "</td>"
+                + "<td>" + j.telefon + "</td>"
+                + "<td>" + j.email + "</td>"
+                + '<td><button class="button btn-sm btn-primary" onclick="jelentkezoModositasa(' + j.jid + ')">Modositas</button></td>'
+                + '<td><button class="button btn-sm btn-outline-danger" onclick="jelentkezoTorlese(' + j.jid + ')">Torles</button></td>'
+                + "</tr>";
+        }
+
+        // Letszam kiirasa
+        document.getElementById("letszam").innerHTML = "Letszam: " + jelentkezok.length + " fo";
+    } catch (hiba) {
+        console.error("Hiba a jelentkezok betoltesekor:", hiba.message);
+        tabla.innerHTML = '<tr><td colspan="10">Hiba tortent a jelentkezok betoltesekor.</td></tr>';
     }
 }
 
-document.getElementById("hozzaad").onclick = async function (e) {
-    const url = 'http://localhost:5000/public/jelentkezok';
-    const payload = {
-        "csid": Number(csid),
-        "jnev": document.getElementById("jnev").value,
-        "szulnev": document.getElementById("szulnev").value,
-        "szulido": document.getElementById("szulido").value,
-        "szulhely": document.getElementById("szulhely").value,
-        "anyjaneve": document.getElementById("anyjaneve").value,
-        "cim": document.getElementById("cim").value,
-        "telefon": document.getElementById("telefon").value,
-        "email": document.getElementById("email").value
+// --- Uj jelentkezo hozzaadasa ---
+
+document.getElementById("hozzaad").onclick = async function () {
+    var adatok = {
+        csid: Number(csoportAzonosito),
+        jnev: document.getElementById("jnev").value,
+        szulnev: document.getElementById("szulnev").value,
+        szulido: document.getElementById("szulido").value,
+        szulhely: document.getElementById("szulhely").value,
+        anyjaneve: document.getElementById("anyjaneve").value,
+        cim: document.getElementById("cim").value,
+        telefon: document.getElementById("telefon").value,
+        email: document.getElementById("email").value
     };
+
     try {
-        const response = await fetch(url, {
+        var valasz = await fetch('http://localhost:5000/public/jelentkezok', {
             method: 'POST',
-            headers: {
-                'Content-type': 'application/json;charset=utf-8'
-            },
-            body: JSON.stringify(payload)
+            headers: { 'Content-type': 'application/json;charset=utf-8' },
+            body: JSON.stringify(adatok)
         });
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(response.status + ' ' + data.message);
+
+        var eredmeny = await valasz.json();
+
+        if (!valasz.ok) {
+            throw new Error(eredmeny.message);
         }
+
+        // Urlap uritese es lista frissitese
         document.querySelector("form").reset();
-        jelentkezok();
-    } catch (err) {
-        console.error("Hiba a jelentkező hozzáadásakor:", err);
-        alert(`Hiba: ${err.message}`);
+        jelentkezokBetoltese();
+    } catch (hiba) {
+        console.error("Hiba a jelentkezo hozzaadasakor:", hiba.message);
+        alert(hiba.message);
     }
+};
+
+// --- Navigacios fuggvenyek ---
+
+// Atiranyitas a jelentkezo modosito oldalra
+function jelentkezoModositasa(jid) {
+    sessionStorage.jid = jid;
+    window.location.href = "jmodosit.html";
 }
 
-function modosit(jid) {
-    sessionStorage.jid = jid
-    window.location.href = "jmodosit.html"
-}
+// --- Jelentkezo torlese ---
 
-async function torol(jid) {
-    if (confirm("Biztosan törölni szeretnéd ezt a jelentkezőt?")) {
-        try {
-            const response = await fetch('http://localhost:5000/admin/jelentkezok/' + jid, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': token
-                }
-            });
-            jelentkezok();
-        } catch (err) {
-            console.log(err);
+async function jelentkezoTorlese(jid) {
+    if (!confirm("Biztosan torolni szeretned ezt a jelentkezot?")) {
+        return;
+    }
+
+    try {
+        var valasz = await fetch('http://localhost:5000/admin/jelentkezok/' + jid, {
+            method: 'DELETE',
+            headers: { 'Authorization': token }
+        });
+
+        if (!valasz.ok) {
+            throw new Error("Hiba a torles soran.");
         }
+
+        jelentkezokBetoltese(); // Lista frissitese
+    } catch (hiba) {
+        console.error("Hiba a torleskor:", hiba.message);
+        alert(hiba.message);
     }
 }
+
+// --- Navigacio ---
 
 document.getElementById("vissza").onclick = function () {
-    document.location.href = "csoportok.html"
-}
+    document.location.href = "csoportok.html";
+};
 
 document.getElementById("kijelentkezes").onclick = function () {
-    delete sessionStorage.token
-    document.location.replace("index.html")
-}
+    delete sessionStorage.token;
+    document.location.replace("index.html");
+};

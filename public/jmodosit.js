@@ -1,77 +1,94 @@
+// Ha nincs bejelentkezve, visszairanyitjuk a fooldra
 if (!sessionStorage.token) {
-    document.location.replace("index.html")
+    document.location.replace("index.html");
 }
-const token = 'Bearer ' + sessionStorage.token
-const jid = sessionStorage.jid
-const url = 'http://localhost:5000/admin/jelentkezok/' + jid;
-document.getElementById("jid").innerHTML = jid
-betolt()
 
-async function betolt() {
+var token = 'Bearer ' + sessionStorage.token;
+var jelentkezoAzonosito = sessionStorage.jid;
+
+// Jelentkezo azonosito kiirasa az oldalra
+document.getElementById("jid").innerHTML = jelentkezoAzonosito;
+
+// Indulaskor betoltjuk a jelentkezo jelenlegi adatait
+jelentkezoAdatokBetoltese();
+
+// --- Jelentkezo jelenlegi adatainak betoltese az urlapba ---
+
+async function jelentkezoAdatokBetoltese() {
     try {
-        const response = await fetch(url, {
+        var valasz = await fetch('http://localhost:5000/admin/jelentkezok/' + jelentkezoAzonosito, {
             method: 'GET',
-            headers: {
-                'Authorization': token
-            }
+            headers: { 'Authorization': token }
         });
-        const json = await response.json();
-        if (!response.ok) {
-            throw new Error(`${response.status} ${json.message}`);
+
+        var jelentkezo = await valasz.json();
+
+        if (!valasz.ok) {
+            throw new Error(jelentkezo.message);
         }
-        document.getElementById("jnev").value = json.jnev;
-        document.getElementById("szulnev").value = json.szulnev || '';
-        document.getElementById("szulido").value = json.szulido;
-        document.getElementById("szulhely").value = json.szulhely;
-        document.getElementById("anyjaneve").value = json.anyjaneve;
-        document.getElementById("cim").value = json.cim;
-        document.getElementById("telefon").value = json.telefon;
-        document.getElementById("email").value = json.email;
-    } catch (err) {
-        console.error("Hiba a jelentkező adatainak betöltésekor:", err);
-        alert(`Hiba történt a jelentkező adatainak betöltésekor: ${err.message}.`);
+
+        // Urlap mezok kitoltese a jelenlegi adatokkal
+        document.getElementById("jnev").value = jelentkezo.jnev;
+        document.getElementById("szulnev").value = jelentkezo.szulnev || '';
+        document.getElementById("szulido").value = jelentkezo.szulido;
+        document.getElementById("szulhely").value = jelentkezo.szulhely;
+        document.getElementById("anyjaneve").value = jelentkezo.anyjaneve;
+        document.getElementById("cim").value = jelentkezo.cim;
+        document.getElementById("telefon").value = jelentkezo.telefon;
+        document.getElementById("email").value = jelentkezo.email;
+    } catch (hiba) {
+        console.error("Hiba az adatok betoltesekor:", hiba.message);
+        alert("Hiba az adatok betoltesekor: " + hiba.message);
     }
 }
 
-document.getElementById("modosit").onclick = async function (e) {
-    const payload = {
-        "csid": Number(sessionStorage.csid),
-        "jnev": document.getElementById("jnev").value,
-        "szulnev": document.getElementById("szulnev").value,
-        "szulido": document.getElementById("szulido").value,
-        "szulhely": document.getElementById("szulhely").value,
-        "anyjaneve": document.getElementById("anyjaneve").value,
-        "cim": document.getElementById("cim").value,
-        "telefon": document.getElementById("telefon").value,
-        "email": document.getElementById("email").value
+// --- Modositas gomb megnyomasa ---
+
+document.getElementById("modosit").onclick = async function () {
+    var adatok = {
+        csid: Number(sessionStorage.csid),
+        jnev: document.getElementById("jnev").value,
+        szulnev: document.getElementById("szulnev").value,
+        szulido: document.getElementById("szulido").value,
+        szulhely: document.getElementById("szulhely").value,
+        anyjaneve: document.getElementById("anyjaneve").value,
+        cim: document.getElementById("cim").value,
+        telefon: document.getElementById("telefon").value,
+        email: document.getElementById("email").value
     };
+
     try {
-        const response = await fetch(url, {
+        var valasz = await fetch('http://localhost:5000/admin/jelentkezok/' + jelentkezoAzonosito, {
             method: 'PUT',
             headers: {
                 'Content-type': 'application/json;charset=utf-8',
                 'Authorization': token
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(adatok)
         });
-        const responseData = await response.json();
-        if (!response.ok) {
-            alert(`Hiba a módosítás során: ${responseData.message || response.status}`);
-            console.error("Szerverhiba a módosításkor:", response.status, responseData);
-        } else {
-            document.location.href = "jelentkezok.html"
+
+        var eredmeny = await valasz.json();
+
+        if (!valasz.ok) {
+            alert("Hiba a modositas soran: " + eredmeny.message);
+            return;
         }
-    } catch (err) {
-        console.error("Hiba a jelentkező módosításakor (hálózati/kliens oldali):", err);
-        alert(`Hiba történt a módosítás közben: ${err.message}. Kérjük, ellenőrizze a hálózati kapcsolatot.`);
+
+        // Sikeres modositas utan visszaterunk a jelentkezok listajhoz
+        document.location.href = "jelentkezok.html";
+    } catch (hiba) {
+        console.error("Hiba a modositaskor:", hiba.message);
+        alert("Hiba tortent a modositas kozben: " + hiba.message);
     }
 };
 
+// --- Navigacio ---
+
 document.getElementById("vissza").onclick = function () {
-    document.location.href = "jelentkezok.html"
-}
+    document.location.href = "jelentkezok.html";
+};
 
 document.getElementById("kijelentkezes").onclick = function () {
-    delete sessionStorage.token
-    document.location.replace("index.html")
-}
+    delete sessionStorage.token;
+    document.location.replace("index.html");
+};

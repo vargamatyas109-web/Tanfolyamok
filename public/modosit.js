@@ -1,75 +1,85 @@
+// Ha nincs bejelentkezve, visszairanyitjuk a fooldra
 if (!sessionStorage.token) {
-    document.location.href = "index.html"
+    document.location.href = "index.html";
 }
-const token = 'Bearer ' + sessionStorage.token;
-const csid = sessionStorage.csid
-const url = `http://localhost:5000/admin/csoportok/${csid}`;
-document.getElementById("csid").innerHTML = csid
-betolt()
 
-async function betolt() {
+var token = 'Bearer ' + sessionStorage.token;
+var csoportAzonosito = sessionStorage.csid;
+
+// Csoport azonosito kiirasa az oldalra
+document.getElementById("csid").innerHTML = csoportAzonosito;
+
+// Indulaskor betoltjuk a csoport jelenlegi adatait
+csoportAdatokBetoltese();
+
+// --- Csoport jelenlegi adatainak betoltese az urlapba ---
+
+async function csoportAdatokBetoltese() {
     try {
-        const response = await fetch(url, {
+        var valasz = await fetch('http://localhost:5000/admin/csoportok/' + csoportAzonosito, {
             method: 'GET',
-            headers: {
-                'Authorization': token
-            }
+            headers: { 'Authorization': token }
         });
-        const json = await response.json();
-        if (!response.ok) {
-            throw new Error(response.status + ' ' + json.message);
+
+        var csoport = await valasz.json();
+
+        if (!valasz.ok) {
+            throw new Error(csoport.message);
         }
-        document.getElementById("kepzes").selectedIndex = json.kid - 1;
-        document.getElementById("datum").value = json.indulas;
-        document.getElementById("beosztas").value = json.beosztas;
-        document.getElementById("helyszin").value = json.helyszin;
-        document.getElementById("ar").value = json.ar;
-    } catch (err) {
-        console.error("Hiba a csoportadatok betöltésekor:", err.message);
-        alert(`Hiba a csoportadatok betöltésekor: ${err.message}. Kérjük, próbálja újra később.`);
+
+        // Urlap mezok kitoltese a jelenlegi adatokkal
+        document.getElementById("kepzes").selectedIndex = csoport.kid - 1;
+        document.getElementById("datum").value = csoport.indulas;
+        document.getElementById("beosztas").value = csoport.beosztas;
+        document.getElementById("helyszin").value = csoport.helyszin;
+        document.getElementById("ar").value = csoport.ar;
+    } catch (hiba) {
+        console.error("Hiba az adatok betoltesekor:", hiba.message);
+        alert("Hiba az adatok betoltesekor: " + hiba.message);
     }
 }
 
-document.getElementById("modosit").onclick = async function (e) {
-    const kidValue = document.getElementById("kepzes").value;
-    const indulasValue = document.getElementById("datum").value;
-    const beosztasValue = document.getElementById("beosztas").value.trim();
-    const helyszinValue = document.getElementById("helyszin").value.trim();
-    const arValue = document.getElementById("ar").value.trim();
+// --- Modositas gomb megnyomasa ---
 
-    const payload = {
-        "kid": parseInt(kidValue, 10),
-        "indulas": indulasValue,
-        "beosztas": beosztasValue,
-        "helyszin": helyszinValue,
-        "ar": arValue
+document.getElementById("modosit").onclick = async function () {
+    var adatok = {
+        kid: parseInt(document.getElementById("kepzes").value),
+        indulas: document.getElementById("datum").value,
+        beosztas: document.getElementById("beosztas").value.trim(),
+        helyszin: document.getElementById("helyszin").value.trim(),
+        ar: document.getElementById("ar").value.trim()
     };
 
     try {
-        const response = await fetch(url, {
+        var valasz = await fetch('http://localhost:5000/admin/csoportok/' + csoportAzonosito, {
             method: 'PUT',
             headers: {
                 'Content-type': 'application/json;charset=utf-8',
                 'Authorization': token
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(adatok)
         });
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: `Szerverhiba: ${response.statusText}` }));
-            throw new Error(errorData.message || `HTTP hiba! Státusz: ${response.status}`);
+
+        if (!valasz.ok) {
+            var hibaAdatok = await valasz.json();
+            throw new Error(hibaAdatok.message);
         }
+
+        // Sikeres modositas utan visszaterunk a csoportok listajhoz
         document.location.href = "csoportok.html";
-    } catch (err) {
-        console.error("Hiba a csoport módosításakor:", err.message);
-        alert(`Hiba a csoport módosításakor: ${err.message}`);
+    } catch (hiba) {
+        console.error("Hiba a modositaskor:", hiba.message);
+        alert("Hiba a modositaskor: " + hiba.message);
     }
 };
 
+// --- Navigacio ---
+
 document.getElementById("vissza").onclick = function () {
-    document.location.href = "csoportok.html"
-}
+    document.location.href = "csoportok.html";
+};
 
 document.getElementById("kijelentkezes").onclick = function () {
-    delete sessionStorage.token
-    document.location.replace("index.html")
-}
+    delete sessionStorage.token;
+    document.location.replace("index.html");
+};

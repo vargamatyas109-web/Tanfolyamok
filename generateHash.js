@@ -1,12 +1,20 @@
-const bcrypt = require('bcrypt');
+// Ez a segedprogram egy jelszot alakit at titkositott formaba (hash).
+// A kapott hash-t kell a .env fajlba masolni ADMIN valtozokent.
+//
+// Hasznalat: node generateHash.js
 
-const passwordToHash = 'AdminJelszo123'; // admin jelszó
-const saltRounds = 10; // Ez az ajánlott "cost factor"
+var bcrypt = require('bcrypt');
+
+var jelszo = 'AdminJelszo123'; // Ide ird a kivant admin jelszot
+var titkositasiSzint = 10;     // Mennyire legyen eros a titkositas (10 az ajanlott)
 
 try {
-    const hashedPassword = bcrypt.hashSync(passwordToHash, saltRounds);
-    console.log('A jelszó:', passwordToHash);
-    console.log('Bcrypt hash:', hashedPassword);
-} catch (error) {
-    console.error('Hiba a hash generálása közben:', error);
+    var hash = bcrypt.hashSync(jelszo, titkositasiSzint);
+    console.log('A jelszo:', jelszo);
+    console.log('Titkositott forma:', hash);
+    console.log('');
+    console.log('Masold be a .env fajlba igy:');
+    console.log('ADMIN="' + hash + '"');
+} catch (hiba) {
+    console.error('Hiba a titkositas kozben:', hiba);
 }

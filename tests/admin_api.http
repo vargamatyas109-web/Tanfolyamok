@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:5000
-@adminPassword = TanfAdmin!2025
+@adminPassword = AdminJelszo
 # Figyelem: Az @adminPassword-nak megfelelő hash-nek kell lennie a .env fájlban az ADMIN változóban!
 
 ###

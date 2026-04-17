@@ -291,7 +291,7 @@ Ez a dokumentum a "Tanfolyamok" webalkalmazás nyilvános felhasználói felüle
     3. Ismert egy érvényes adminisztrátori jelszó.
 * **Tesztlépések:**
     1. Görgessen az oldal alján található "Adminisztrátor jelszó" űrlaphoz.
-    2. Írja be a helyes jelszót (TanfAdmin!2025) az "Adminisztrátor jelszó" mezőbe.
+    2. Írja be a helyes jelszót (AdminJelszo) az "Adminisztrátor jelszó" mezőbe.
     3. Kattintson a "Bejelentkezés" gombra.
 * **Elvárt eredmény:**
     1. Az `uzenet2` elemben rövid időre megjelenik a szerver által küldött sikeres üzenet (pl. "Sikeres bejelentkezés").

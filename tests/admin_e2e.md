@@ -23,7 +23,7 @@ Adminisztrációs funkciók tesztesetei
 
 **Tesztadatok:**
 
-* Jelszó: `TanfAdmin!2025`
+* Jelszó: `AdminJelszo`
 
 **Elvárt eredmény:**
 

@@ -5,7 +5,7 @@
 
 var bcrypt = require('bcrypt');
 
-var jelszo = 'AdminJelszo123'; // Ide ird a kivant admin jelszot
+var jelszo = 'AdminJelszo'; // Ide ird a kivant admin jelszot
 var titkositasiSzint = 10;     // Mennyire legyen eros a titkositas (10 az ajanlott)
 
 try {

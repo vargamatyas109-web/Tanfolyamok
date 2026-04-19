@@ -1,10 +1,10 @@
-// Egy csoportba maximum ennyi fo ferhet
+// Egy csoportba maximum ennyi fő férhet
 var maxLetszam = 8;
 
-// Oldal betoltesekor lekerjuk a csoportokat
+// Oldal betöltésekor lekérjük a csoportokat
 csoportokBetoltese();
 
-// --- Csoportok tabla feltoltese ---
+// --- Csoportok tábla feltöltése ---
 
 async function csoportokBetoltese() {
     var tabla = document.getElementById("csoportok");
@@ -17,11 +17,11 @@ async function csoportokBetoltese() {
             throw new Error(csoportok.message);
         }
 
-        // Tabla fejlec
-        tabla.innerHTML = "<tr><th>Azonosito</th><th>Kepzes</th><th>Indulas</th>"
-            + "<th>Beosztas</th><th>Szabad hely</th><th>Ar (Ft)</th></tr>";
+        // Tábla fejléc
+        tabla.innerHTML = "<tr><th>Azonosító</th><th>Képzés</th><th>Indulás</th>"
+            + "<th>Beosztás</th><th>Szabad hely</th><th>Ár (Ft)</th></tr>";
 
-        // Minden csoport egy sor a tablaban
+        // Minden csoport egy sor a táblában
         for (var i = 0; i < csoportok.length; i++) {
             var cs = csoportok[i];
             var szabadHely = maxLetszam - cs.letszam;
@@ -35,22 +35,22 @@ async function csoportokBetoltese() {
                 + "</tr>";
         }
     } catch (hiba) {
-        console.error("Hiba a csoportok betoltesekor:", hiba.message);
-        tabla.innerHTML = '<tr><td colspan="6">Hiba tortent a csoportok betoltesekor.</td></tr>';
+        console.error("Hiba a csoportok betöltésekor:", hiba.message);
+        tabla.innerHTML = '<tr><td colspan="6">Hiba történt a csoportok betöltésekor.</td></tr>';
     }
 }
 
-// --- Jelentkezes gomb megnyomasa ---
+// --- Jelentkezés gomb megnyomása ---
 
 document.getElementById("jelentkezemGomb").onclick = async function () {
     var hibaUzenet = urlapEllenorzes();
     var uzenetMezo = document.getElementById("uzenet");
     uzenetMezo.innerHTML = hibaUzenet;
 
-    // Ha van hiba, nem kuldjuk el
+    // Ha van hiba, nem küldjük el
     if (hibaUzenet) return;
 
-    // Adatok osszegyujtese az urlaprol
+    // Adatok összegyűjtése az űrlapról
     var adatok = {
         csid: document.getElementById("csid").value,
         jnev: document.getElementById("jnev").value,
@@ -76,17 +76,17 @@ document.getElementById("jelentkezemGomb").onclick = async function () {
             throw new Error(eredmeny.message);
         }
 
-        // Sikeres jelentkezes
+        // Sikeres jelentkezés
         uzenetMezo.innerHTML = eredmeny.message;
         document.getElementById("jelentkezemGomb").disabled = true;
-        csoportokBetoltese(); // Tabla frissitese (szabad helyek valtoztak)
+        csoportokBetoltese(); // Tábla frissítése (szabad helyek változtak)
     } catch (hiba) {
-        console.error("Hiba a jelentkezeskor:", hiba.message);
+        console.error("Hiba a jelentkezéskor:", hiba.message);
         uzenetMezo.innerHTML = hiba.message;
     }
 };
 
-// --- Admin bejelentkezes ---
+// --- Admin bejelentkezés ---
 
 document.getElementById("login").onclick = async function () {
     var uzenetMezo = document.getElementById("uzenet2");
@@ -104,69 +104,69 @@ document.getElementById("login").onclick = async function () {
         uzenetMezo.innerHTML = eredmeny.message;
 
         if (!valasz.ok) {
-            throw new Error("Hibas jelszo");
+            throw new Error("Hibás jelszó");
         }
 
-        // Sikeres belepes: token mentese es atiranyitas az admin oldalra
+        // Sikeres belépés: token mentése és átirányítás az admin oldalra
         document.getElementById("password").value = "";
         sessionStorage.token = eredmeny.token;
         document.location.href = "csoportok.html";
     } catch (hiba) {
-        console.error("Bejelentkezesi hiba:", hiba.message);
-        uzenetMezo.innerHTML = "Hibas jelszo!";
+        console.error("Bejelentkezési hiba:", hiba.message);
+        uzenetMezo.innerHTML = "Hibás jelszó!";
     }
 };
 
-// --- Urlap ellenorzese (jelentkezes elott) ---
+// --- Űrlap ellenőrzése (jelentkezés előtt) ---
 
 function urlapEllenorzes() {
-    // Nev ellenorzese (5-60 karakter)
+    // Név ellenőrzése (5-60 karakter)
     var nev = document.getElementById("jnev").value.trim();
     if (nev.length < 5 || nev.length > 60) {
-        return "Hibas nev! (5-60 karakter lehet)";
+        return "Hibás név! (5-60 karakter lehet)";
     }
 
-    // Szuletesi ido ellenorzese
+    // Születési idő ellenőrzése
     var datum = document.getElementById("szulido").value;
     if (datum === "") {
-        return "Add meg a szuletesi idot!";
+        return "Add meg a születési időt!";
     }
 
-    // Kor szamitasa (18-65 ev kozott kell lennie)
+    // Kor számítása (18-65 év között kell lennie)
     var szuletesiEv = parseInt(datum.substring(0, 4));
     var mostaniEv = new Date().getFullYear();
     var kor = mostaniEv - szuletesiEv;
     if (kor < 18 || kor > 65) {
-        return "Hibas szuletesi ido! (18-65 ev kozotti lehetsz)";
+        return "Hibás születési idő! (18-65 év közötti lehetsz)";
     }
 
-    // Szuletesi hely ellenorzese (3-60 karakter)
+    // Születési hely ellenőrzése (3-60 karakter)
     var hely = document.getElementById("szulhely").value.trim();
     if (hely.length < 3 || hely.length > 60) {
-        return "Hibas szuletesi hely! (3-60 karakter lehet)";
+        return "Hibás születési hely! (3-60 karakter lehet)";
     }
 
-    // Anyja neve ellenorzese (5-60 karakter)
+    // Anyja neve ellenőrzése (5-60 karakter)
     var anyjaNeve = document.getElementById("anyjaneve").value.trim();
     if (anyjaNeve.length < 5 || anyjaNeve.length > 60) {
-        return "Anyja neve hibas! (5-60 karakter lehet)";
+        return "Anyja neve hibás! (5-60 karakter lehet)";
     }
 
-    // Cim ellenorzese (15-80 karakter)
+    // Cím ellenőrzése (15-80 karakter)
     var cim = document.getElementById("cim").value.trim();
     if (cim.length < 15 || cim.length > 80) {
-        return "Hibas cim! (15-80 karakter lehet)";
+        return "Hibás cím! (15-80 karakter lehet)";
     }
 
-    // Telefonszam ellenorzese (8-15 karakter)
+    // Telefonszám ellenőrzése (8-15 karakter)
     var telefon = document.getElementById("telefon").value.trim();
     if (telefon.length < 8 || telefon.length > 15) {
-        return "Hibas telefonszam! (8-15 karakter lehet)";
+        return "Hibás telefonszám! (8-15 karakter lehet)";
     }
 
-    // Tandij elfogadasa
+    // Tandíj elfogadása
     if (!document.getElementById("tandij").checked) {
-        return "Kerjuk, fogadja el a fizetesi feltetelt a pipa bejelolesevel!";
+        return "Kérjük, fogadja el a fizetési feltételt a pipa bejelölésével!";
     }
 
     // Nincs hiba

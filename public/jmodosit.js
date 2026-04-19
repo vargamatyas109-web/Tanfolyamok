@@ -1,4 +1,4 @@
-// Ha nincs bejelentkezve, visszairanyitjuk a fooldra
+// Ha nincs bejelentkezve, visszairányítjuk a főoldalra
 if (!sessionStorage.token) {
     document.location.replace("index.html");
 }
@@ -6,13 +6,13 @@ if (!sessionStorage.token) {
 var token = 'Bearer ' + sessionStorage.token;
 var jelentkezoAzonosito = sessionStorage.jid;
 
-// Jelentkezo azonosito kiirasa az oldalra
+// Jelentkező azonosító kiírása az oldalra
 document.getElementById("jid").innerHTML = jelentkezoAzonosito;
 
-// Indulaskor betoltjuk a jelentkezo jelenlegi adatait
+// Induláskor betöltjük a jelentkező jelenlegi adatait
 jelentkezoAdatokBetoltese();
 
-// --- Jelentkezo jelenlegi adatainak betoltese az urlapba ---
+// --- Jelentkező jelenlegi adatainak betöltése az űrlapba ---
 
 async function jelentkezoAdatokBetoltese() {
     try {
@@ -27,7 +27,7 @@ async function jelentkezoAdatokBetoltese() {
             throw new Error(jelentkezo.message);
         }
 
-        // Urlap mezok kitoltese a jelenlegi adatokkal
+        // Űrlap mezők kitöltése a jelenlegi adatokkal
         document.getElementById("jnev").value = jelentkezo.jnev;
         document.getElementById("szulnev").value = jelentkezo.szulnev || '';
         document.getElementById("szulido").value = jelentkezo.szulido;
@@ -37,12 +37,12 @@ async function jelentkezoAdatokBetoltese() {
         document.getElementById("telefon").value = jelentkezo.telefon;
         document.getElementById("email").value = jelentkezo.email;
     } catch (hiba) {
-        console.error("Hiba az adatok betoltesekor:", hiba.message);
-        alert("Hiba az adatok betoltesekor: " + hiba.message);
+        console.error("Hiba az adatok betöltésekor:", hiba.message);
+        alert("Hiba az adatok betöltésekor: " + hiba.message);
     }
 }
 
-// --- Modositas gomb megnyomasa ---
+// --- Módosítás gomb megnyomása ---
 
 document.getElementById("modosit").onclick = async function () {
     var adatok = {
@@ -70,19 +70,19 @@ document.getElementById("modosit").onclick = async function () {
         var eredmeny = await valasz.json();
 
         if (!valasz.ok) {
-            alert("Hiba a modositas soran: " + eredmeny.message);
+            alert("Hiba a módosítás során: " + eredmeny.message);
             return;
         }
 
-        // Sikeres modositas utan visszaterunk a jelentkezok listajhoz
+        // Sikeres módosítás után visszatérünk a jelentkezők listájhoz
         document.location.href = "jelentkezok.html";
     } catch (hiba) {
-        console.error("Hiba a modositaskor:", hiba.message);
-        alert("Hiba tortent a modositas kozben: " + hiba.message);
+        console.error("Hiba a módosításkor:", hiba.message);
+        alert("Hiba történt a módosítás közben: " + hiba.message);
     }
 };
 
-// --- Navigacio ---
+// --- Navigáció ---
 
 document.getElementById("vissza").onclick = function () {
     document.location.href = "jelentkezok.html";

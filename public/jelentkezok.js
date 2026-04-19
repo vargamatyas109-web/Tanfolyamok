@@ -1,4 +1,4 @@
-// Ha nincs bejelentkezve, visszairanyitjuk a fooldra
+// Ha nincs bejelentkezve, visszairányítjuk a főoldalra
 if (!sessionStorage.token) {
     document.location.replace("index.html");
 }
@@ -7,13 +7,13 @@ var csoportAzonosito = sessionStorage.csid;
 var token = 'Bearer ' + sessionStorage.token;
 var maxLetszam = 8;
 
-// Csoport azonosito kiirasa az oldalra
+// Csoport azonosító kiírása az oldalra
 document.getElementById("csid").innerHTML = csoportAzonosito;
 
-// Indulaskor betoltjuk a jelentkezok listajat
+// Induláskor betöltjük a jelentkezők listáját
 jelentkezokBetoltese();
 
-// --- Jelentkezok tabla feltoltese ---
+// --- Jelentkezők tábla feltöltése ---
 
 async function jelentkezokBetoltese() {
     var tabla = document.getElementById("jelentkezok");
@@ -30,12 +30,12 @@ async function jelentkezokBetoltese() {
             throw new Error(jelentkezok.message);
         }
 
-        // Tabla fejlec
-        tabla.innerHTML = "<tr><th>Nev</th><th>Szuletesi nev</th><th>Ido</th>"
-            + "<th>Hely</th><th>Anyja neve</th><th>Cim</th><th>Telefon</th>"
+        // Tábla fejléc
+        tabla.innerHTML = "<tr><th>Név</th><th>Születési név</th><th>Idő</th>"
+            + "<th>Hely</th><th>Anyja neve</th><th>Cím</th><th>Telefon</th>"
             + "<th>Email</th><th></th><th></th></tr>";
 
-        // Minden jelentkezo egy sor
+        // Minden jelentkező egy sor
         for (var i = 0; i < jelentkezok.length; i++) {
             var j = jelentkezok[i];
             tabla.innerHTML += "<tr>"
@@ -47,20 +47,20 @@ async function jelentkezokBetoltese() {
                 + "<td>" + j.cim + "</td>"
                 + "<td>" + j.telefon + "</td>"
                 + "<td>" + j.email + "</td>"
-                + '<td><button class="button btn-sm btn-primary" onclick="jelentkezoModositasa(' + j.jid + ')">Modositas</button></td>'
-                + '<td><button class="button btn-sm btn-outline-danger" onclick="jelentkezoTorlese(' + j.jid + ')">Torles</button></td>'
+                + '<td><button class="button btn-sm btn-primary" onclick="jelentkezoModositasa(' + j.jid + ')">Módosítás</button></td>'
+                + '<td><button class="button btn-sm btn-outline-danger" onclick="jelentkezoTorlese(' + j.jid + ')">Törlés</button></td>'
                 + "</tr>";
         }
 
-        // Letszam kiirasa
-        document.getElementById("letszam").innerHTML = "Letszam: " + jelentkezok.length + " fo";
+        // Létszám kiírása
+        document.getElementById("letszam").innerHTML = "Létszám: " + jelentkezok.length + " fő";
     } catch (hiba) {
-        console.error("Hiba a jelentkezok betoltesekor:", hiba.message);
-        tabla.innerHTML = '<tr><td colspan="10">Hiba tortent a jelentkezok betoltesekor.</td></tr>';
+        console.error("Hiba a jelentkezők betöltésekor:", hiba.message);
+        tabla.innerHTML = '<tr><td colspan="10">Hiba történt a jelentkezők betöltésekor.</td></tr>';
     }
 }
 
-// --- Uj jelentkezo hozzaadasa ---
+// --- Új jelentkező hozzáadása ---
 
 document.getElementById("hozzaad").onclick = async function () {
     var adatok = {
@@ -88,27 +88,27 @@ document.getElementById("hozzaad").onclick = async function () {
             throw new Error(eredmeny.message);
         }
 
-        // Urlap uritese es lista frissitese
+        // Űrlap ürítése és lista frissítése
         document.querySelector("form").reset();
         jelentkezokBetoltese();
     } catch (hiba) {
-        console.error("Hiba a jelentkezo hozzaadasakor:", hiba.message);
+        console.error("Hiba a jelentkező hozzáadásakor:", hiba.message);
         alert(hiba.message);
     }
 };
 
-// --- Navigacios fuggvenyek ---
+// --- Navigációs függvények ---
 
-// Atiranyitas a jelentkezo modosito oldalra
+// Átirányítás a jelentkező módosító oldalra
 function jelentkezoModositasa(jid) {
     sessionStorage.jid = jid;
     window.location.href = "jmodosit.html";
 }
 
-// --- Jelentkezo torlese ---
+// --- Jelentkező törlése ---
 
 async function jelentkezoTorlese(jid) {
-    if (!confirm("Biztosan torolni szeretned ezt a jelentkezot?")) {
+    if (!confirm("Biztosan törölni szeretnéd ezt a jelentkezőt?")) {
         return;
     }
 
@@ -119,17 +119,17 @@ async function jelentkezoTorlese(jid) {
         });
 
         if (!valasz.ok) {
-            throw new Error("Hiba a torles soran.");
+            throw new Error("Hiba a törlés során.");
         }
 
-        jelentkezokBetoltese(); // Lista frissitese
+        jelentkezokBetoltese(); // Lista frissítése
     } catch (hiba) {
-        console.error("Hiba a torleskor:", hiba.message);
+        console.error("Hiba a törléskor:", hiba.message);
         alert(hiba.message);
     }
 }
 
-// --- Navigacio ---
+// --- Navigáció ---
 
 document.getElementById("vissza").onclick = function () {
     document.location.href = "csoportok.html";

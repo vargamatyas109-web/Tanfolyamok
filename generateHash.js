@@ -1,20 +1,20 @@
-// Ez a segedprogram egy jelszot alakit at titkositott formaba (hash).
-// A kapott hash-t kell a .env fajlba masolni ADMIN valtozokent.
+// Ez a segédprogram egy jelszót alakít át titkosított formába (hash).
+// A kapott hash-t kell a .env fájlba másolni ADMIN változóként.
 //
-// Hasznalat: node generateHash.js
+// Használat: node generateHash.js
 
 var bcrypt = require('bcrypt');
 
-var jelszo = 'AdminJelszo'; // Ide ird a kivant admin jelszot
-var titkositasiSzint = 10;     // Mennyire legyen eros a titkositas (10 az ajanlott)
+var jelszo = 'AdminJelszo'; // Ide írd a kívánt admin jelszót
+var titkositasiSzint = 10;     // Mennyire legyen erős a titkosítás (10 az ajánlott)
 
 try {
     var hash = bcrypt.hashSync(jelszo, titkositasiSzint);
-    console.log('A jelszo:', jelszo);
-    console.log('Titkositott forma:', hash);
+    console.log('A jelszó:', jelszo);
+    console.log('Titkosított forma:', hash);
     console.log('');
-    console.log('Masold be a .env fajlba igy:');
+    console.log('Másold be a .env fájlba így:');
     console.log('ADMIN="' + hash + '"');
 } catch (hiba) {
-    console.error('Hiba a titkositas kozben:', hiba);
+    console.error('Hiba a titkosítás közben:', hiba);
 }

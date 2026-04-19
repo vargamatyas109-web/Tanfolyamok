@@ -1,4 +1,4 @@
-// Ha nincs bejelentkezve, visszairanyitjuk a fooldra
+// Ha nincs bejelentkezve, visszairányítjuk a főoldalra
 if (!sessionStorage.token) {
     document.location.href = "index.html";
 }
@@ -6,13 +6,13 @@ if (!sessionStorage.token) {
 var token = 'Bearer ' + sessionStorage.token;
 var csoportAzonosito = sessionStorage.csid;
 
-// Csoport azonosito kiirasa az oldalra
+// Csoport azonosító kiírása az oldalra
 document.getElementById("csid").innerHTML = csoportAzonosito;
 
-// Indulaskor betoltjuk a csoport jelenlegi adatait
+// Induláskor betöltjük a csoport jelenlegi adatait
 csoportAdatokBetoltese();
 
-// --- Csoport jelenlegi adatainak betoltese az urlapba ---
+// --- Csoport jelenlegi adatainak betöltése az űrlapba ---
 
 async function csoportAdatokBetoltese() {
     try {
@@ -27,19 +27,19 @@ async function csoportAdatokBetoltese() {
             throw new Error(csoport.message);
         }
 
-        // Urlap mezok kitoltese a jelenlegi adatokkal
+        // Űrlap mezők kitöltése a jelenlegi adatokkal
         document.getElementById("kepzes").selectedIndex = csoport.kid - 1;
         document.getElementById("datum").value = csoport.indulas;
         document.getElementById("beosztas").value = csoport.beosztas;
         document.getElementById("helyszin").value = csoport.helyszin;
         document.getElementById("ar").value = csoport.ar;
     } catch (hiba) {
-        console.error("Hiba az adatok betoltesekor:", hiba.message);
-        alert("Hiba az adatok betoltesekor: " + hiba.message);
+        console.error("Hiba az adatok betöltésekor:", hiba.message);
+        alert("Hiba az adatok betöltésekor: " + hiba.message);
     }
 }
 
-// --- Modositas gomb megnyomasa ---
+// --- Módosítás gomb megnyomása ---
 
 document.getElementById("modosit").onclick = async function () {
     var adatok = {
@@ -65,15 +65,15 @@ document.getElementById("modosit").onclick = async function () {
             throw new Error(hibaAdatok.message);
         }
 
-        // Sikeres modositas utan visszaterunk a csoportok listajhoz
+        // Sikeres módosítás után visszatérünk a csoportok listájhoz
         document.location.href = "csoportok.html";
     } catch (hiba) {
-        console.error("Hiba a modositaskor:", hiba.message);
-        alert("Hiba a modositaskor: " + hiba.message);
+        console.error("Hiba a módosításkor:", hiba.message);
+        alert("Hiba a módosításkor: " + hiba.message);
     }
 };
 
-// --- Navigacio ---
+// --- Navigáció ---
 
 document.getElementById("vissza").onclick = function () {
     document.location.href = "csoportok.html";

@@ -1,15 +1,15 @@
-// Ha nincs bejelentkezve, visszairanyitjuk a fooldra
+// Ha nincs bejelentkezve, visszairányítjuk a főoldalra
 if (!sessionStorage.token) {
     document.location.replace("index.html");
 }
 
 var token = 'Bearer ' + sessionStorage.token;
 
-// Indulaskor betoltjuk a mai datumot es a csoportokat
+// Induláskor betöltjük a mai dátumot és a csoportokat
 document.getElementById("datum").value = new Date().toISOString().slice(0, 10);
 csoportokBetoltese();
 
-// --- Csoportok tabla feltoltese ---
+// --- Csoportok tábla feltöltése ---
 
 async function csoportokBetoltese() {
     var tabla = document.getElementById("csoportok");
@@ -26,12 +26,12 @@ async function csoportokBetoltese() {
             throw new Error(csoportok.message);
         }
 
-        // Tabla fejlec
-        tabla.innerHTML = '<tr><th>Azon</th><th>Kepzes</th><th>Indulas</th>'
-            + '<th>Beosztas</th><th>Helyszin</th><th>Ar (Ft)</th>'
-            + '<th>Fo</th><th></th><th></th><th></th></tr>';
+        // Tábla fejléc
+        tabla.innerHTML = '<tr><th>Azon</th><th>Képzés</th><th>Indulás</th>'
+            + '<th>Beosztás</th><th>Helyszín</th><th>Ár (Ft)</th>'
+            + '<th>Fő</th><th></th><th></th><th></th></tr>';
 
-        // Minden csoport egy sor a tablaban, 3 gombbal
+        // Minden csoport egy sor a táblában, 3 gombbal
         for (var i = 0; i < csoportok.length; i++) {
             var cs = csoportok[i];
             tabla.innerHTML += '<tr>'
@@ -42,18 +42,18 @@ async function csoportokBetoltese() {
                 + '<td>' + cs.helyszin + '</td>'
                 + '<td>' + cs.ar.toLocaleString() + '</td>'
                 + '<td>' + cs.letszam + '</td>'
-                + '<td><button class="button btn-sm btn-primary" onclick="jelentkezokMegnyitasa(' + cs.csid + ')">Jelentkezok</button></td>'
-                + '<td><button class="button btn-sm btn-primary" onclick="csoportModositasa(' + cs.csid + ')">Modositas</button></td>'
-                + '<td><button class="button btn-sm btn-outline-danger" onclick="csoportTorlese(' + cs.csid + ')">Torles</button></td>'
+                + '<td><button class="button btn-sm btn-primary" onclick="jelentkezokMegnyitasa(' + cs.csid + ')">Jelentkezők</button></td>'
+                + '<td><button class="button btn-sm btn-primary" onclick="csoportModositasa(' + cs.csid + ')">Módosítás</button></td>'
+                + '<td><button class="button btn-sm btn-outline-danger" onclick="csoportTorlese(' + cs.csid + ')">Törlés</button></td>'
                 + '</tr>';
         }
     } catch (hiba) {
-        console.error("Hiba a csoportok betoltesekor:", hiba.message);
-        tabla.innerHTML = '<tr><td colspan="10">Hiba tortent a csoportok betoltesekor.</td></tr>';
+        console.error("Hiba a csoportok betöltésekor:", hiba.message);
+        tabla.innerHTML = '<tr><td colspan="10">Hiba történt a csoportok betöltésekor.</td></tr>';
     }
 }
 
-// --- Uj csoport hozzaadasa ---
+// --- Új csoport hozzáadása ---
 
 document.getElementById("hozzaad").onclick = async function () {
     var adatok = {
@@ -80,74 +80,74 @@ document.getElementById("hozzaad").onclick = async function () {
             throw new Error(eredmeny.message);
         }
 
-        // Urlap uritese es tabla frissitese
+        // Űrlap ürítése és tábla frissítése
         document.querySelector("form").reset();
         csoportokBetoltese();
     } catch (hiba) {
-        console.error("Hiba a csoport hozzaadasakor:", hiba.message);
+        console.error("Hiba a csoport hozzáadásakor:", hiba.message);
         alert(hiba.message);
     }
 };
 
-// --- Navigacios fuggvenyek ---
+// --- Navigációs függvények ---
 
-// Atiranyitas a jelentkezok oldalra
+// Átirányítás a jelentkezők oldalra
 function jelentkezokMegnyitasa(csid) {
     sessionStorage.csid = csid;
     window.location.href = "jelentkezok.html";
 }
 
-// Atiranyitas a modosito oldalra
+// Átirányítás a módosító oldalra
 function csoportModositasa(csid) {
     sessionStorage.csid = csid;
     window.location.href = "modosit.html";
 }
 
-// --- Csoport torlese ---
+// --- Csoport törlése ---
 
 async function csoportTorlese(csid) {
     try {
-        // Eloszor megnezzuk, vannak-e jelentkezok
+        // Először megnézzük, vannak-e jelentkezők
         var listaValasz = await fetch('http://localhost:5000/admin/lista/' + csid, {
             method: 'GET',
             headers: { 'Authorization': token }
         });
 
         if (!listaValasz.ok) {
-            throw new Error("Hiba a jelentkezok lekeresekor.");
+            throw new Error("Hiba a jelentkezők lekérésekor.");
         }
 
         var jelentkezok = await listaValasz.json();
 
-        // Csak ures csoportot lehet torolni
+        // Csak üres csoportot lehet törölni
         if (jelentkezok.length > 0) {
-            alert("Csak ures csoport torolheto!");
+            alert("Csak üres csoport törölhető!");
             return;
         }
 
-        // Megerosites keres
-        if (!confirm("Biztosan torolni szeretned ezt a csoportot?")) {
+        // Megerősítés kérés
+        if (!confirm("Biztosan törölni szeretnéd ezt a csoportot?")) {
             return;
         }
 
-        // Torles vegrehajtasa
+        // Törlés végrehajtása
         var torlesValasz = await fetch('http://localhost:5000/admin/csoportok/' + csid, {
             method: 'DELETE',
             headers: { 'Authorization': token }
         });
 
         if (!torlesValasz.ok) {
-            throw new Error("Hiba a csoport torlesekor.");
+            throw new Error("Hiba a csoport törlésekor.");
         }
 
-        csoportokBetoltese(); // Tabla frissitese
+        csoportokBetoltese(); // Tábla frissítése
     } catch (hiba) {
-        console.error("Hiba a torles soran:", hiba.message);
+        console.error("Hiba a törlés során:", hiba.message);
         alert(hiba.message);
     }
 }
 
-// --- Kijelentkezes ---
+// --- Kijelentkezés ---
 
 document.getElementById("kijelentkezes").onclick = function () {
     delete sessionStorage.token;
